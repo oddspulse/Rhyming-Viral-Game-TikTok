@@ -36,7 +36,16 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "output": "static",
+      "backgroundColor": "#0a0a0a",
+      "themeColor": "#FF1CF7",
+      "description": "Viral tongue twister challenge game. Record yourself speaking rhymes at high speeds, get scored, and compete on leaderboards!",
+      "lang": "en",
+      "scope": "/",
+      "startUrl": "/",
+      "display": "standalone",
+      "orientation": "any"
     },
     "plugins": [
       "expo-router",

@@ -39,9 +39,10 @@ A **TikTok-native mobile game** where users record themselves saying rhyming phr
 | **Styling** | nativewind (Tailwind CSS) |
 | **Animations** | Reanimated 3 + Gesture Handler |
 | **Backend** | Supabase (Postgres + Auth + Storage) |
-| **Audio** | expo-av, expo-speech |
-| **Haptics** | expo-haptics |
+| **Audio/Recording** | expo-av (mobile), Web Speech API (web) |
+| **Haptics** | expo-haptics (mobile), Vibration API (web) |
 | **Sharing** | expo-sharing |
+| **Web Deploy** | Vercel (static export) |
 
 ---
 
@@ -246,6 +247,37 @@ score = round(accuracy * 80 + speedBonus)
 ---
 
 ## 📦 Build for Production
+
+### 🌐 Web (Vercel) - Fastest to Ship
+
+**Deploy to web in 2 minutes:**
+
+```bash
+# Build for web
+npm run build:web
+
+# Deploy to Vercel (one-time setup)
+npm install -g vercel
+vercel
+
+# Future deployments
+git push origin main  # Auto-deploys via Vercel
+```
+
+**Live instantly at**: `https://your-project.vercel.app`
+
+See **[WEB_DEPLOY.md](./WEB_DEPLOY.md)** for complete web deployment guide.
+
+**Web Features:**
+- ✅ Full UI/UX with animations
+- ✅ Web Speech API for recording (Chrome/Edge)
+- ✅ All challenges and leaderboards
+- ✅ PWA installable on mobile
+- ✅ No app store approval needed
+
+---
+
+### 📱 Mobile Apps (iOS/Android)
 
 ### iOS
 
