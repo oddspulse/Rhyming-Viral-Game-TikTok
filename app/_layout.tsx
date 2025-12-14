@@ -2,8 +2,14 @@ import '../global.css';
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { soundManager } from '@/lib/sounds';
+
+// Load web polyfills for Expo SDK 51 compatibility
+if (Platform.OS === 'web') {
+  require('../polyfills.web.js');
+}
 
 // Disable static rendering for web compatibility
 export const unstable_settings = {
