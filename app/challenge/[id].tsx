@@ -9,13 +9,9 @@ import { PulseRing, RecordButton } from '@/components/Animations';
 import { calculateScore } from '@/lib/scoring';
 import { haptics } from '@/lib/haptics';
 import { soundManager } from '@/lib/sounds';
-import Animated, { FadeIn, FadeInDown, useSharedValue } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
 
-// Platform-specific imports
-let Audio: any;
-if (Platform.OS !== 'web') {
-  Audio = require('expo-av').Audio;
-}
+// expo-av is imported dynamically only when needed on mobile
 
 interface Challenge {
   id: string;
@@ -66,6 +62,7 @@ export default function ChallengePlayScreen() {
     if (Platform.OS === 'web') return;
 
     try {
+      const { Audio } = require('expo-av');
       await Audio.requestPermissionsAsync();
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
@@ -144,6 +141,7 @@ export default function ChallengePlayScreen() {
     try {
       haptics.recordStart();
 
+      const { Audio } = require('expo-av');
       const { recording: newRecording } = await Audio.Recording.createAsync(
         Audio.RecordingOptionsPresets.HIGH_QUALITY
       );
