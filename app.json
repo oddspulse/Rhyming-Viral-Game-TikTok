@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "Speed Rhyme",
+    "slug": "speed-rhyme-viral",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "scheme": "speedrhyme",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0a0a0a"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.speedrhyme.viral",
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "We need access to speech recognition to score your rhymes!",
+        "NSMicrophoneUsageDescription": "We need microphone access to record your rhyme attempts!"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0a0a0a"
+      },
+      "package": "com.speedrhyme.viral",
+      "permissions": [
+        "RECORD_AUDIO",
+        "VIBRATE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-av",
+        {
+          "microphonePermission": "We need microphone access to record your rhymes!"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
