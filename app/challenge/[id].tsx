@@ -1,9 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, Pressable, Alert } from 'react-native';
+import { View, Text, Pressable, Alert, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Audio } from 'expo-av';
-import * as Speech from 'expo-speech';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
 import { Button, IconButton } from '@/components/Button';
@@ -11,7 +9,13 @@ import { PulseRing, RecordButton } from '@/components/Animations';
 import { calculateScore } from '@/lib/scoring';
 import { haptics } from '@/lib/haptics';
 import { soundManager } from '@/lib/sounds';
-import Animated, { FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, useSharedValue } from 'react-native-reanimated';
+
+// Platform-specific imports
+let Audio: any;
+if (Platform.OS !== 'web') {
+  Audio = require('expo-av').Audio;
+}
 
 interface Challenge {
   id: string;
@@ -29,27 +33,38 @@ export default function ChallengePlayScreen() {
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
-  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [recording, setRecording] = useState<any>(null);
+  const [transcript, setTranscript] = useState<string>('');
   const [isBeatActive, setIsBeatActive] = useState(false);
 
   const beatIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const recognitionRef = useRef<any>(null);
   const shakeValue = useSharedValue(0);
 
   useEffect(() => {
     loadChallenge();
-    setupAudio();
+    if (Platform.OS !== 'web') {
+      setupAudio();
+    }
 
     return () => {
       if (beatIntervalRef.current) {
         clearInterval(beatIntervalRef.current);
       }
-      if (recording) {
+      if (Platform.OS !== 'web' && recording) {
         recording.stopAndUnloadAsync();
+      }
+      if (Platform.OS === 'web' && recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {}
       }
     };
   }, [id]);
 
   const setupAudio = async () => {
+    if (Platform.OS === 'web') return;
+
     try {
       await Audio.requestPermissionsAsync();
       await Audio.setAudioModeAsync({
@@ -121,6 +136,11 @@ export default function ChallengePlayScreen() {
   const startRecording = async () => {
     if (!challenge) return;
 
+    if (Platform.OS === 'web') {
+      startWebRecording();
+      return;
+    }
+
     try {
       haptics.recordStart();
 
@@ -144,7 +164,80 @@ export default function ChallengePlayScreen() {
     }
   };
 
+  const startWebRecording = () => {
+    if (!challenge) return;
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      Alert.alert('Not Supported', 'Speech recognition is not supported in this browser. Try Chrome or Edge.');
+      return;
+    }
+
+    haptics.recordStart();
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    let finalTranscript = '';
+
+    recognition.onresult = (event: any) => {
+      const last = event.results.length - 1;
+      const text = event.results[last][0].transcript;
+
+      if (event.results[last].isFinal) {
+        finalTranscript = text;
+        setTranscript(text);
+      } else {
+        setTranscript(text);
+      }
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+      stopBeatMetronome();
+
+      if (finalTranscript || transcript) {
+        processResult(finalTranscript || transcript, null);
+      } else {
+        Alert.alert('No Speech Detected', 'Please try again and speak clearly.');
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+      setIsRecording(false);
+      stopBeatMetronome();
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsRecording(true);
+    setTranscript('');
+    startBeatMetronome(challenge.bpm);
+
+    // Auto-stop after 15 seconds
+    setTimeout(() => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {}
+      }
+    }, 15000);
+  };
+
   const stopRecording = async () => {
+    if (Platform.OS === 'web') {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {}
+      }
+      return;
+    }
+
     if (!recording || !challenge) return;
 
     try {
@@ -287,9 +380,14 @@ export default function ChallengePlayScreen() {
 
         {isRecording && (
           <Animated.View entering={FadeIn} className="mt-6 items-center">
-            <Text className="text-neon-pink text-base font-bold animate-pulse">
-              🎤 RECORDING...
+            <Text className="text-neon-pink text-base font-bold">
+              🎤 {Platform.OS === 'web' ? 'LISTENING...' : 'RECORDING...'}
             </Text>
+            {Platform.OS === 'web' && transcript && (
+              <Text className="text-gray-400 text-sm mt-2 text-center px-4">
+                "{transcript}"
+              </Text>
+            )}
           </Animated.View>
         )}
       </Animated.View>
