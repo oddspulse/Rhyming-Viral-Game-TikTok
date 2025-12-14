@@ -1,8 +1,14 @@
+import '../global.css';
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { soundManager } from '@/lib/sounds';
+
+// Disable static rendering for web compatibility
+export const unstable_settings = {
+  initialRouteName: '(tabs)',
+};
 
 export default function RootLayout() {
   useEffect(() => {
